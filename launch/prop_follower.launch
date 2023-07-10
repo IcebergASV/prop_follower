@@ -1,1 +1,32 @@
- 
+ <?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <!-- Specify what functionality you are testing-->
+    <arg name="object_detection" default="false"/> 
+    <arg name="lidar-distance-angle-measurement" default="false"/> <!-- setting to false produces arbitrary fake coordinates-->
+    <arg name="velocity_sender" default="true"/> <!-- setting to true uses velocity_sender, setting to false uses waypoint_sender -->
+
+  <!--=======================================================================-->
+
+  
+
+  <node name="angle_finder" pkg="prop_follower" type="angle_finder_node" output="log" if="$(arg object_detection)">
+    <rosparam file="$(find prop_follower)/config/params.yaml" command="load" />
+  </node>
+
+  <node name="coord_finder" pkg="prop_follower" type="coord_finder_node" output="log" if="$(arg lidar-distance-angle-measurement)" >
+    <rosparam file="$(find prop_follower)/config/params.yaml" command="load" />
+  </node>
+
+  <node name="fake_coord_finder" pkg="prop_follower" type="fake_coord_finder_node" output="log" unless="$(arg lidar-distance-angle-measurement)" >
+    <rosparam file="$(find prop_follower)/config/params.yaml" command="load" />
+  </node>
+
+  <node name="velocity_sender" pkg="prop_follower" type="velocity_sender_node" output="log" if="$(arg velocity_sender)" >
+    <rosparam file="$(find prop_follower)/config/params.yaml" command="load" />
+  </node>
+
+  <node name="waypoint_sender" pkg="prop_follower" type="waypoint_sender_node" output="log" unless="$(arg velocity_sender)" >
+    <rosparam file="$(find prop_follower)/config/params.yaml" command="load" />
+  </node>
+
+</launch>
