@@ -124,9 +124,10 @@ include_directories(
 )
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/prop_follower.cpp
-# )
+add_library(lidarPointLib
+  src/lidarPoint.cpp
+  src/lidarPoint.h
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -227,3 +228,8 @@ add_dependencies(angle_finder ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPOR
 add_executable(fake_coord_finder src/fake_coord_finder.cpp)
 target_link_libraries(fake_coord_finder ${catkin_LIBRARIES})
 add_dependencies(fake_coord_finder ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+
+## Specify libraries to link a library or executable target against
+target_link_libraries(coord_finder
+  lidarPointLib
+ )

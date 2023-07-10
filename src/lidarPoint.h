@@ -1,0 +1,26 @@
+#ifndef LIDARPOINT_H
+#define LIDARPOINT_H
+
+class lidarPoint {
+public:
+    // Constructors
+    lidarPoint();
+    lidarPoint(double distance, double angle);    
+
+    // Getters
+    double getDistance() const;
+    double getAngle() const;
+
+    // Setters
+    void setDistance(double distance);
+    void setAngle(double angle);
+
+private:
+    double distance_;
+    double angle_;
+};
+
+//Operator Overloads
+std::ostream& operator<<(std::ostream& os, const lidarPoint& point);
+
+#endif // LIDARPOINT_H
