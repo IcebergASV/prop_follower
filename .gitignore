@@ -8,6 +8,8 @@ srv_gen/
 build_isolated/
 devel_isolated/
 
+.catkin_tools
+
 
 # Ignore generated docs
 *.dox
