@@ -1,7 +1,5 @@
 #include <ros/ros.h>
-#include <navigation_pkg/BoundingBoxes.h>
-#include <navigation_pkg/BoundingBox.h>
-#include <navigation_pkg/PropInProgress.h>
+#include <prop_follower/PropAngleRange.h>
 #include <cmath>
 #include <ros/console.h>
 
@@ -12,7 +10,7 @@ public:
     AngleFinder() : nh_(""), private_nh_("~") 
     {
         yolo_sub_ = nh_.subscribe("/bounding_boxes", 1, &AngleFinder::yoloCallback, this);
-        prop_pub_ = nh_.advertise<navigation_pkg::PropInProgress>("/prop_angle_range", 1);
+        prop_pub_ = nh_.advertise<prop_follower::PropAngleRange>("/prop_angle_range", 1);
         private_nh_.param<double>("realsense_fov", realsense_fov, 0.0);
         private_nh_.param<int>("realsense_res_x", realsense_res_x, 0);
     }
@@ -61,7 +59,7 @@ private:
 };
 
 int main(int argc, char** argv) {
-    ros::init(argc, argv, "angle_finder_node");
+    ros::init(argc, argv, "angle_finder");
     if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info))
         ros::console::notifyLoggerLevelsChanged();
     AngleFinder angle_finder;

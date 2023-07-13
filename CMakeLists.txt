@@ -124,9 +124,10 @@ include_directories(
 )
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/prop_follower.cpp
-# )
+add_library(lidarPointLib
+  src/lidarPoint.cpp
+  src/lidarPoint.h
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -211,7 +212,7 @@ include_directories(
 #add_executable(waypoint_sender src/waypoint_sender.cpp)
 #target_link_libraries(waypoint_sender ${catkin_LIBRARIES})
 #add_dependencies(waypoint_sender ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
-
+#
 #add_executable(velocity_sender src/velocity_sender.cpp)
 #target_link_libraries(velocity_sender ${catkin_LIBRARIES})
 #add_dependencies(velocity_sender ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
@@ -228,6 +229,7 @@ add_dependencies(angle_finder ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPOR
 #target_link_libraries(fake_coord_finder ${catkin_LIBRARIES})
 #add_dependencies(fake_coord_finder ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 
-add_executable(fake_angle_finder src/fake_angle_finder.cpp)
-target_link_libraries(fake_angle_finder ${catkin_LIBRARIES})
-add_dependencies(fake_angle_finder ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+## Specify libraries to link a library or executable target against
+target_link_libraries(coord_finder
+  lidarPointLib
+ )
