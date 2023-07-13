@@ -1,8 +1,5 @@
 #include <ros/ros.h>
-#include <navigation_pkg/Compass.h> 
-#include <navigation_pkg/PropInProgress.h>
-#include <navigation_pkg/Prop.h>
-#include <navigation_pkg/SimpleGPS.h> //temporary
+#include <prop_follower/PropAngleRange.h> 
 #include <geographic_msgs/GeoPoint.h>
 #include <cmath> 
 #include <ros/console.h>
@@ -16,7 +13,7 @@ public:
         gps_sub_ = nh_.subscribe("/mavros/global_position/global", 1, &CoordFinder::gpsCallback, this);
         compass_sub_ = nh_.subscribe("/mavros/global_position/compass_hdg", 1, &CoordFinder::compassCallback, this );
         prop_sub_ = nh_.subscribe("/prop_closest_point", 1, &CoordFinder::propCallback, this);
-        prop_pub_ = nh_.advertise<navigation_pkg::Prop>("/completed_props", 1);
+        prop_pub_ = nh_.advertise<prop_follower::Prop>("/completed_props", 1);
         private_nh_.param<double>("coord_mapping_error_estimation", coord_mapping_error_estimation, 0.0); 
         private_nh_.param<double>("degrees_lat_per_meter", degrees_lat_per_meter, 0.0);
         private_nh_.param<double>("degrees_lon_per_meter", degrees_lon_per_meter, 0.0);
@@ -32,19 +29,19 @@ public:
     }
 
 private:
-    void gpsCallback(const navigation_pkg::SimpleGPS::ConstPtr& msg)
+    void gpsCallback(const prop_follower::SimpleGPS::ConstPtr& msg)
     {
         robot_lat_ = msg->latitude;
         robot_lon_ = msg->longitude;
         robot_alt_ = msg->altitude;
     }
 
-    void compassCallback(const navigation_pkg::Compass::ConstPtr& msg)
+    void compassCallback(const prop_follower::Compass::ConstPtr& msg)
     {
         robot_heading = msg->data;
     }
 
-    void propCallback(const navigation_pkg::PropInProgress::ConstPtr& msg)
+    void propCallback(const prop_follower::PropInProgress::ConstPtr& msg)
     {
         //// Calculate the GPS coordinates of the prop
         double dist = msg->closest_pnt_dist;
@@ -72,7 +69,7 @@ private:
 
         
         // Create and publish the Prop message with the prop coordinates
-        navigation_pkg::Prop prop_msg;
+        prop_follower::Prop prop_msg;
         prop_msg.prop_type = msg->prop_type;
 
         prop_msg.prop_coords.latitude = prop_lat;

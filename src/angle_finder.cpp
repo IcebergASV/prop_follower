@@ -11,8 +11,8 @@ class AngleFinder {
 public:
     AngleFinder() : nh_(""), private_nh_("~") 
     {
-        yolo_sub_ = nh_.subscribe("/yolo", 1, &AngleFinder::yoloCallback, this);
-        prop_pub_ = nh_.advertise<navigation_pkg::PropInProgress>("/prop_angles", 1);
+        yolo_sub_ = nh_.subscribe("/bounding_boxes", 1, &AngleFinder::yoloCallback, this);
+        prop_pub_ = nh_.advertise<navigation_pkg::PropInProgress>("/prop_angle_range", 1);
         private_nh_.param<double>("realsense_fov", realsense_fov, 0.0);
         private_nh_.param<int>("realsense_res_x", realsense_res_x, 0);
     }
@@ -43,7 +43,7 @@ private:
             navigation_pkg::PropInProgress prop_msg;
             prop_msg.prop_type = box.label; //assign object classification label to the prop
             prop_msg.theta_1 = theta_right;
-            prop_msg.theta_2 = theta_left;
+            prop_msg.theta_2 = theta_left; 
             prop_pub_.publish(prop_msg);
         }
 
