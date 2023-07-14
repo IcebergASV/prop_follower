@@ -25,10 +25,10 @@ public:
 
 private:
 
-    void yoloCallback(const navigation_pkg::BoundingBoxes::ConstPtr& msg)
+    void yoloCallback(const prop_follower::BoundingBoxes::ConstPtr& msg)
     {
-        //navigation_pkg::BoundingBoxes boxes = msg;
-        for (navigation_pkg::BoundingBox box : msg->bounding_boxes){
+        //prop_follower::BoundingBoxes boxes = msg;
+        for (prop_follower::BoundingBox box : msg->bounding_boxes){
             //get the position of the bounding box
             x_min = box.xmin;
             x_max = box.xmax;
@@ -38,7 +38,7 @@ private:
             double theta_left = fov_end - ((box.xmin / realsense_res_x) * realsense_fov);
 
             // Create and publish the Prop message with the prop coordinates
-            navigation_pkg::PropInProgress prop_msg;
+            prop_follower::PropInProgress prop_msg;
             prop_msg.prop_type = box.label; //assign object classification label to the prop
             prop_msg.theta_1 = theta_right;
             prop_msg.theta_2 = theta_left; 
