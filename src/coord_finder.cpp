@@ -2,6 +2,7 @@
 #include <sensor_msgs/LaserScan.h>
 #include <prop_follower/PropAngleRange.h>
 #include <geometry_msgs/Vector3.h>
+#include <std_msgs/String.h>
 #include <cmath>
 #include <vector>
 #include <stdexcept>
@@ -21,6 +22,7 @@
 class CoordFinder {
 public:
     CoordFinder() : nh_(""), private_nh_("~") {
+        
         // get ROS parameters
         private_nh_.param<double>("angle_error_adjustment", angle_error_adjustment, 0.0);
 
@@ -56,6 +58,7 @@ private:
     double angle_error_adjustment;
     prop_follower::PropAngleRange prop_msg_;
     sensor_msgs::LaserScan scan_msg;
+
     std::string TAG = "COORD_FINDER: ";
 
     /**
@@ -66,8 +69,7 @@ private:
     void propCallback(const prop_follower::PropAngleRange::ConstPtr& msg) {
         // save the PropInProgress message for later use
         prop_msg_ = *msg;
-        ROS_DEBUG_STREAM(TAG << "Received PropInProgress message with theta_1=" << prop_msg_.theta_1
-            << " and theta_2=" << prop_msg_.theta_2);
+        ROS_DEBUG_STREAM(TAG << "Received PropInProgress message with theta_1=" << prop_msg_.theta_1 << " and theta_2=" << prop_msg_.theta_2);
     }
 
     /**
@@ -87,15 +89,15 @@ private:
 
         // check if the PropInProgress message is valid
         if (prop_msg_.prop_label.empty()) {
-            ROS_WARN(TAG <<  "Invalid PropInProgress message received - Prop type is empty");
+            ROS_WARN_STREAM(TAG << "Invalid PropInProgress message received - Prop type is empty");
             return;
         }
         if (std::isnan(prop_msg_.theta_1)) {
-            ROS_WARN(TAG << "Invalid PropInProgress message received - theta 1 is empty");
+            ROS_WARN_STREAM(TAG << "Invalid PropInProgress message received - theta 1 is empty");
             return;
         }
         if (std::isnan(prop_msg_.theta_2)) {
-            ROS_WARN(TAG << "Invalid PropInProgress message received - theta 2 is empty");
+            ROS_WARN_STREAM(TAG << "Invalid PropInProgress message received - theta 2 is empty");
             return;
         }
 
@@ -111,7 +113,7 @@ private:
 
         // check that the range indexes are within the range of the scan message and that index1 > index2
         if (index1 < 0 || index2 < 0 || index1 >= scan_msg.ranges.size() || index2 >= scan_msg.ranges.size() || index1 >= index2) {
-            ROS_WARN(TAG << "PropInProgress message range indexes are out of bounds for the given scan message");
+            ROS_WARN_STREAM(TAG << "PropInProgress message range indexes are out of bounds for the given scan message");
             return;
         }
 
@@ -121,7 +123,7 @@ private:
         double starting_angle = laser_angle_min + (M_PI/2.0); //starting angle for lidar scan 
         std::vector<lidarPoint> scanPoints = CoordFinder::createLidarPoints(scan_msg.ranges, starting_angle, laser_angle_increment);
         if (scanPoints.size()<1){
-            ROS_WARN("No points added to scanPoints vector");
+            ROS_WARN_STREAM("No points added to scanPoints vector");
             return;
         }
 
@@ -133,7 +135,7 @@ private:
             ROS_DEBUG_STREAM(TAG << "Pushing back points within camera range: " << scanPoints[i]);
         }
         if (selectedPoints.size()<1){
-            ROS_WARN(TAG << "No points added to vector containing points within camera range ");
+            ROS_WARN_STREAM(TAG << "No points added to vector containing points within camera range ");
             return;
         }
 
@@ -172,7 +174,7 @@ private:
     * @param[in] angleIncrement - the amoung to increment the angle for each distance
     * @returns the lidarPoints vector
     */
-    static std::vector<lidarPoint> createLidarPoints(const std::vector<float>& distances, double startAngle, double angleIncrement) {
+    std::vector<lidarPoint> createLidarPoints(const std::vector<float>& distances, double startAngle, double angleIncrement) {
         std::vector<lidarPoint> lidarPoints;
         ROS_DEBUG_STREAM(TAG << "start angle: " << startAngle);
         // Add the first Lidar point

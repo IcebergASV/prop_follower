@@ -67,7 +67,7 @@ private:
     double realsense_fov;
     double fov_end = (M_PI / 2) + (realsense_fov / 2 );
     int realsense_res_x;
-    string TAG = "ANGLE_FINDER: ";
+    std::string TAG = "ANGLE_FINDER: ";
 };
 
 int main(int argc, char** argv) {
