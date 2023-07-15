@@ -1,23 +1,36 @@
 #include <ros/ros.h>
 #include <geometry_msgs/Vector3.h>
+#include <prop_follower/PropAngleRange.h>
 #include <cmath>
+#include <vector>
+
+
+
 
 void fake_coord_finder() {
-    ros::NodeHandle nh;
+    ros::NodeHandle nh("~");
+    std::vector<double> x_coords;
+    std::vector<double> y_coords;
+    std::vector<double> z_coords;
+    std::vector<double> default_;
+    std::vector<geometry_msgs::Vector3> points_vec;
+    nh.getParam("x", x_coords);
+    nh.getParam("y", y_coords);
+    nh.getParam("z", z_coords);
     ros::Publisher pub = nh.advertise<geometry_msgs::Vector3>("prop_local_coords", 1);
-    private_nh_.param<double>("points", points);
+
     ros::Rate rate(10);
     prop_follower::PropAngleRange msg;
     geometry_msgs::Vector3 prop_coords_msg;
 
-    std::vector<geometry_msg::Vector3> points_vec;
-
+    
+    int i = 0;
     // Iterate over each point
-    for (const auto& p : points) {
+    for (const auto& coord : x_coords) {
       // Access the 'x', 'y', and 'z' coordinates
-      double x = p["x"].as<double>();
-      double y = p["y"].as<double>();
-      double z = p["z"].as<double>();
+      double x = x_coords[i];
+      double y = y_coords[i];
+      double z = z_coords[i];
 
       // Create a geometry_msgs::Vector3 message
       prop_coords_msg.x = x;
@@ -25,15 +38,16 @@ void fake_coord_finder() {
       prop_coords_msg.z = z;
 
       points_vec.push_back(prop_coords_msg);
+      i++;
     }
 
-    int i = 0;
+    int j = 0;
 
     while (ros::ok()) {
         //ROS_DEBUG_STREAM(prop_coords_msg);
-        i = i%(point_vec.size()-1);
-        pub.publish(points_vec[i]);
-        i++;
+        j = j%(points_vec.size());
+        pub.publish(points_vec[j]);
+        j++;
         rate.sleep();
     }
 }
@@ -41,7 +55,7 @@ void fake_coord_finder() {
 int main(int argc, char** argv) {
     ros::init(argc, argv, "fake_coord_finder");
     try {
-        fake_bbox_angles();
+        fake_coord_finder();
     }
     catch (ros::Exception& e) {
         ROS_ERROR_STREAM("An exception occurred in the fake_coord_finder node: " << e.what());
