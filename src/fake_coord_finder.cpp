@@ -1,31 +1,38 @@
 #include <ros/ros.h>
 #include <geometry_msgs/Vector3.h>
-#include <prop_follower/PropAngleRange.h>
 #include <cmath>
 #include <vector>
 
-
-
-
+/**
+ * @brief Node to publish fake coordinates for testing velocity and waypoint sender without camera or lidar readings
+ *
+ * Coordinates are loaded in from fake_coords.yaml
+ *    
+ */
 void fake_coord_finder() {
     ros::NodeHandle nh("~");
+
+    // Coordinate parameters
     std::vector<double> x_coords;
     std::vector<double> y_coords;
     std::vector<double> z_coords;
-    std::vector<double> default_;
-    std::vector<geometry_msgs::Vector3> points_vec;
     nh.getParam("x", x_coords);
     nh.getParam("y", y_coords);
     nh.getParam("z", z_coords);
+
+    // Vector to store the coordinates
+    std::vector<geometry_msgs::Vector3> points_vec;
+
     ros::Publisher pub = nh.advertise<geometry_msgs::Vector3>("prop_local_coords", 1);
 
     ros::Rate rate(10);
-    prop_follower::PropAngleRange msg;
+
+    // Message to publish
     geometry_msgs::Vector3 prop_coords_msg;
 
     
     int i = 0;
-    // Iterate over each point
+    // use the x coordinates to iterate over all coordinates
     for (const auto& coord : x_coords) {
       // Access the 'x', 'y', and 'z' coordinates
       double x = x_coords[i];
@@ -44,7 +51,7 @@ void fake_coord_finder() {
     int j = 0;
 
     while (ros::ok()) {
-        //ROS_DEBUG_STREAM(prop_coords_msg);
+        // Publish the messages in points_vec one by one - loop after reaching the end
         j = j%(points_vec.size());
         pub.publish(points_vec[j]);
         j++;
