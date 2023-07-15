@@ -217,9 +217,9 @@ add_library(lidarPointLib
 #target_link_libraries(velocity_sender ${catkin_LIBRARIES})
 #add_dependencies(velocity_sender ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 
-#add_executable(coord_finder src/coord_finder.cpp)
-#target_link_libraries(coord_finder ${catkin_LIBRARIES})
-#add_dependencies(coord_finder ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+add_executable(coord_finder src/coord_finder.cpp)
+target_link_libraries(coord_finder ${catkin_LIBRARIES})
+add_dependencies(coord_finder ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 
 #add_executable(angle_finder src/angle_finder.cpp)
 #target_link_libraries(angle_finder ${catkin_LIBRARIES})
@@ -234,6 +234,6 @@ target_link_libraries(fake_coord_finder ${catkin_LIBRARIES})
 add_dependencies(fake_coord_finder ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-#target_link_libraries(coord_finder
-#  lidarPointLib
-# )
+target_link_libraries(coord_finder
+  lidarPointLib
+ )
