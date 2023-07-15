@@ -22,9 +22,11 @@ class CoordFinder {
 public:
     CoordFinder() : nh_(""), private_nh_("~") {
         // get ROS parameters
+        private_nh_.param<double>("angle_error_adjustment", angle_error_adjustment, 0.0);
+
         private_nh_.param<std::string>("prop_topic", prop_topic_, "/prop_angle_range");
         private_nh_.param<std::string>("scan_topic", scan_topic_, "/scan");
-        private_nh_.param<double>("angle_error_adjustment", angle_error_adjustment, 0.0);
+        
 
         sub_scan_ = nh_.subscribe(scan_topic_, 1, &CoordFinder::scanCallback, this);
         sub_prop_ = nh_.subscribe(prop_topic_, 1, &CoordFinder::propCallback, this);

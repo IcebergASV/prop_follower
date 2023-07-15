@@ -10,15 +10,23 @@
  * Set object_detection to false to run this node. 
  */
 void fake_bbox_angles() {
-    ros::NodeHandle nh;
+    ros::NodeHandle nh("");
+    ros::NodeHandle private_nh_("~");
+
+    // Get params
+    double theta_1;
+    double theta_2;
+    private_nh_.param<double>("theta_1", theta_1, 0.0);
+    private_nh_.param<double>("theta_2", theta_2, M_PI);
+
     ros::Publisher pub = nh.advertise<prop_follower::PropAngleRange>("prop_angle_range", 1);
     ros::Rate rate(10);
     prop_follower::PropAngleRange msg;
 
     // Message
     msg.prop_label = "buoy";
-    msg.theta_1 = 0; // 0 degrees
-    msg.theta_2 = M_PI; // 180 degrees
+    msg.theta_1 = theta_1; 
+    msg.theta_2 = theta_2;
 
     while (ros::ok()) {
         ROS_INFO_STREAM(msg);

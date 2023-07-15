@@ -1,3 +1,3 @@
 string prop_label
-float32 theta_1
-float32 theta_2
+float64 theta_1
+float64 theta_2
