@@ -229,9 +229,9 @@ add_executable(fake_angle_finder src/fake_angle_finder.cpp)
 target_link_libraries(fake_angle_finder ${catkin_LIBRARIES})
 add_dependencies(fake_angle_finder ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 
-#add_executable(fake_coord_finder src/fake_coord_finder.cpp)
-#target_link_libraries(fake_coord_finder ${catkin_LIBRARIES})
-#add_dependencies(fake_coord_finder ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+add_executable(fake_coord_finder src/fake_coord_finder.cpp)
+target_link_libraries(fake_coord_finder ${catkin_LIBRARIES})
+add_dependencies(fake_coord_finder ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(coord_finder

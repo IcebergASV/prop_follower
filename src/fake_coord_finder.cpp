@@ -20,21 +20,20 @@ void fake_coord_finder() {
       double z = p["z"].as<double>();
 
       // Create a geometry_msgs::Vector3 message
-      geometry_msgs::Vector3 point;
-      point.x = x;
-      point.y = y;
-      point.z = z;
+      prop_coords_msg.x = x;
+      prop_coords_msg.y = y;
+      prop_coords_msg.z = z;
 
-      points_vec.push_back(point);
+      points_vec.push_back(prop_coords_msg);
     }
 
-    prop_coords_msg.x = ; //North
-    prop_coords_msg.y = ; //East 
-    prop_coords_msg.z = 0; //Down
+    int i = 0;
 
     while (ros::ok()) {
-        ROS_DEBUG_STREAM(prop_coords_msg);
-        pub.publish(prop_coords_msg);
+        //ROS_DEBUG_STREAM(prop_coords_msg);
+        i = i%(point_vec.size()-1);
+        pub.publish(points_vec[i]);
+        i++;
         rate.sleep();
     }
 }
