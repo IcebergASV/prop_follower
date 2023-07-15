@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?xml version="1.0" encoding="UTF-8"?>
 <launch>
   <!-- Specify what functionality you are testing-->
     <arg name="object_detection" default="false"/> 
@@ -17,12 +16,12 @@
 
   <node name="fake_angle_finder" pkg="prop_follower" type="fake_angle_finder" output="log" unless="$(arg object_detection)">
     <rosparam file="$(find prop_follower)/config/params.yaml" command="load" />
-      <remap from="/scan" to="/rect_bot/laser/scan" />
   </node>
 
-  <!--node name="coord_finder" pkg="prop_follower" type="coord_finder" output="log" if="$(arg lidar-distance-angle-measurement)" >
+  <node name="coord_finder" pkg="prop_follower" type="coord_finder" output="log" if="$(arg lidar-distance-angle-measurement)" >
     <rosparam file="$(find prop_follower)/config/params.yaml" command="load" />
-  </node-->
+    <remap from="/scan" to="/rect_bot/laser/scan" />
+  </node>
 
   <node name="fake_coord_finder" pkg="prop_follower" type="fake_coord_finder" output="log" unless="$(arg lidar-distance-angle-measurement)" >
     <rosparam file="$(find prop_follower)/config/fake_coords.yaml" command="load" />
