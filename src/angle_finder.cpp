@@ -2,6 +2,7 @@
 #include <prop_follower/PropAngleRange.h>
 #include <cmath>
 #include <ros/console.h>
+#include <string>
 
 
 
@@ -29,6 +30,14 @@ private:
     {
         //prop_follower::BoundingBoxes boxes = msg;
         for (prop_follower::BoundingBox box : msg->bounding_boxes){
+            ROS_DEBUG_STREAM(TAG << "Received BoundingBox message with xmin = " << box.xmin
+            << " and xmax = " << box.xmax);
+
+            // Make sure bounding box message is valid
+            if (box.xmax >= box.xmin || box.xmin < 0 || box.xmax > realsense_res_x){
+                ROS_WARN(TAG, "Invalid bounding box");
+            }
+
             //get the position of the bounding box
             x_min = box.xmin;
             x_max = box.xmax;
@@ -41,7 +50,9 @@ private:
             prop_follower::PropInProgress prop_msg;
             prop_msg.prop_type = box.label; //assign object classification label to the prop
             prop_msg.theta_1 = theta_right;
-            prop_msg.theta_2 = theta_left; 
+            prop_msg.theta_1 = theta_left; 
+
+            ROS_DEBUG_STREAM(TAG << "Publishing prop_msg with theta_1 = " << prop_msg.theta_1  << " and theta_2 =" << prop_msg.theta_1);
             prop_pub_.publish(prop_msg);
         }
 
@@ -56,6 +67,7 @@ private:
     double realsense_fov;
     double fov_end = (M_PI / 2) + (realsense_fov / 2 );
     int realsense_res_x;
+    string TAG = "ANGLE_FINDER: ";
 };
 
 int main(int argc, char** argv) {
