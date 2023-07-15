@@ -7,7 +7,8 @@
  * @brief Node to publish fake coordinates for testing velocity and waypoint sender without camera or lidar readings
  *
  * Coordinates are loaded in from fake_coords.yaml
- *    
+ * 
+ * Set lidar-distance-angle-measurement to false to run this node 
  */
 void fake_coord_finder() {
     ros::NodeHandle nh("~");
