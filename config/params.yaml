@@ -4,3 +4,4 @@ angle_error_adjustment: 0.0 #radians TUNING
 max_lidar_range: 29 #meters - should be slightly less than real range, or accurate range 
 min_lidar_range: 0.1 #meters - should be slight larger than real, or accurate range
 coord_mapping_error_estimation: 2 #meters TUNING
+vel_scale_factor: 1.0 #scaling factor for velocity
