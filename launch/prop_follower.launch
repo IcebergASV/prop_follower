@@ -7,9 +7,6 @@
 
   <!--=======================================================================-->
 
-  <!--Launch file for sim-->
-  <include file="$(find box_bot_sim_pkg)/launch/rect_bot_world.launch"/>
-
   <!--node name="angle_finder" pkg="prop_follower" type="angle_finder_node" output="log" if="$(arg object_detection)">
     <rosparam file="$(find prop_follower)/config/params.yaml" command="load" />
   </node-->
@@ -20,7 +17,6 @@
 
   <node name="coord_finder" pkg="prop_follower" type="coord_finder" output="log" if="$(arg lidar-distance-angle-measurement)" >
     <rosparam file="$(find prop_follower)/config/params.yaml" command="load" />
-    <remap from="/scan" to="/rect_bot/laser/scan"/>
   </node>
 
   <node name="fake_coord_finder" pkg="prop_follower" type="fake_coord_finder" output="log" unless="$(arg lidar-distance-angle-measurement)" >
