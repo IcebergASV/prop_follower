@@ -50,9 +50,9 @@ private:
             prop_follower::PropInProgress prop_msg;
             prop_msg.prop_type = box.label; //assign object classification label to the prop
             prop_msg.theta_small = theta_right;
-            prop_msg.theta_small = theta_left; 
+            prop_msg.theta_large = theta_left; 
 
-            ROS_DEBUG_STREAM(TAG << "Publishing prop_msg with theta_small = " << prop_msg.theta_small  << " and theta_large =" << prop_msg.theta_small);
+            ROS_DEBUG_STREAM(TAG << "Publishing prop_msg with theta_small = " << prop_msg.theta_small  << " and theta_large =" << prop_msg.theta_large);
             prop_pub_.publish(prop_msg);
         }
 
