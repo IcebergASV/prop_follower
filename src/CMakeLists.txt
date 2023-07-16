@@ -125,8 +125,8 @@ include_directories(
 
 ## Declare a C++ library
 add_library(lidarPointLib
-  src/lidarPoint.cpp
-  src/lidarPoint.h
+  lidarPoint.cpp
+  lidarPoint.h
 )
 
 ## Add cmake target dependencies of the library
@@ -213,11 +213,11 @@ add_library(lidarPointLib
 #target_link_libraries(waypoint_sender ${catkin_LIBRARIES})
 #add_dependencies(waypoint_sender ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 
-#add_executable(velocity_sender src/velocity_sender.cpp)
-#target_link_libraries(velocity_sender ${catkin_LIBRARIES})
-#add_dependencies(velocity_sender ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+add_executable(velocity_sender vel_sender.cpp)
+target_link_libraries(velocity_sender ${catkin_LIBRARIES})
+add_dependencies(velocity_sender ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 
-add_executable(coord_finder src/coord_finder.cpp)
+add_executable(coord_finder coord_finder.cpp)
 target_link_libraries(coord_finder ${catkin_LIBRARIES})
 add_dependencies(coord_finder ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 
@@ -225,11 +225,11 @@ add_dependencies(coord_finder ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPOR
 #target_link_libraries(angle_finder ${catkin_LIBRARIES})
 #add_dependencies(angle_finder ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 
-add_executable(fake_angle_finder src/fake_angle_finder.cpp)
+add_executable(fake_angle_finder fake_angle_finder.cpp)
 target_link_libraries(fake_angle_finder ${catkin_LIBRARIES})
 add_dependencies(fake_angle_finder ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 
-add_executable(fake_coord_finder src/fake_coord_finder.cpp)
+add_executable(fake_coord_finder fake_coord_finder.cpp)
 target_link_libraries(fake_coord_finder ${catkin_LIBRARIES})
 add_dependencies(fake_coord_finder ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 
