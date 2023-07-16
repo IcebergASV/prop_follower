@@ -5,7 +5,7 @@
 #include <cmath>
 #include <vector>
 #include <stdexcept>
-#include "lidarPoint.h"
+#include "../lib/lidarPoint.h"
 #include <string>
 #include <iostream>
 #include <ros/console.h>
