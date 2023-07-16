@@ -69,7 +69,7 @@ private:
     void propCallback(const prop_follower::PropAngleRange::ConstPtr& msg) {
         // save the PropInProgress message for later use
         prop_msg_ = *msg;
-        ROS_DEBUG_STREAM(TAG << "Received PropInProgress message with theta_1=" << prop_msg_.theta_1 << " and theta_2=" << prop_msg_.theta_2);
+        ROS_DEBUG_STREAM(TAG << "Received PropInProgress message with theta_small=" << prop_msg_.theta_small << " and theta_large=" << prop_msg_.theta_large);
     }
 
     /**
@@ -92,18 +92,18 @@ private:
             ROS_WARN_STREAM(TAG << "Invalid PropInProgress message received - Prop type is empty");
             return;
         }
-        if (std::isnan(prop_msg_.theta_1)) {
+        if (std::isnan(prop_msg_.theta_small)) {
             ROS_WARN_STREAM(TAG << "Invalid PropInProgress message received - theta 1 is empty");
             return;
         }
-        if (std::isnan(prop_msg_.theta_2)) {
+        if (std::isnan(prop_msg_.theta_large)) {
             ROS_WARN_STREAM(TAG << "Invalid PropInProgress message received - theta 2 is empty");
             return;
         }
 
         //add a safety range onto the bounding box angles
-        double index1_angle = prop_msg_.theta_1 + angle_error_adjustment;
-        double index2_angle = prop_msg_.theta_2 - angle_error_adjustment;
+        double index1_angle = prop_msg_.theta_small + angle_error_adjustment;
+        double index2_angle = prop_msg_.theta_large - angle_error_adjustment;
         // calculate the range indexes for the given theta angles
         double steps = (laser_angle_max * 2) / laser_angle_increment; 
         int index1 = (int)(((index1_angle + (laser_angle_max - (M_PI/2))) / (laser_angle_max*2))* steps);

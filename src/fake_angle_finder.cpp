@@ -14,10 +14,10 @@ void fake_bbox_angles() {
     ros::NodeHandle private_nh_("~");
 
     // Get params
-    double theta_1;
-    double theta_2;
-    private_nh_.param<double>("theta_1", theta_1, 0.0);
-    private_nh_.param<double>("theta_2", theta_2, M_PI);
+    double theta_small;
+    double theta_large; 
+    private_nh_.param<double>("theta_small", theta_small, 0.0);
+    private_nh_.param<double>("theta_large", theta_large, M_PI);
 
     ros::Publisher pub = nh.advertise<prop_follower::PropAngleRange>("prop_angle_range", 1);
     ros::Rate rate(10);
@@ -25,8 +25,8 @@ void fake_bbox_angles() {
 
     // Message
     msg.prop_label = "buoy";
-    msg.theta_1 = theta_1; 
-    msg.theta_2 = theta_2;
+    msg.theta_small = theta_small; 
+    msg.theta_large = theta_large;
 
     while (ros::ok()) {
         ROS_INFO_STREAM(msg);
