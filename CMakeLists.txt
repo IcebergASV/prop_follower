@@ -125,8 +125,8 @@ include_directories(
 
 ## Declare a C++ library
 add_library(lidarPointLib
-  src/lidarPoint.cpp
-  src/lidarPoint.h
+  lib/lidarPoint.cpp
+  lib/lidarPoint.h
 )
 
 ## Add cmake target dependencies of the library

@@ -1,6 +1,11 @@
 #ifndef LIDARPOINT_H
 #define LIDARPOINT_H
 
+/**
+* @brief Represents a single point from a lidar scan
+* 
+* Contains a distance and an angle
+*/
 class lidarPoint {
 public:
     // Constructors

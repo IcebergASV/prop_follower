@@ -1,6 +1,11 @@
+# angle_finder
 realsense_fov: 1.204277184 # radians
 realsense_res_x: 1920 #pixel width of image frames
+
+# coord_finder
 angle_error_adjustment: 0.0 #radians TUNING
-max_lidar_range: 29 #meters - should be slightly less than real range, or accurate range 
-min_lidar_range: 0.1 #meters - should be slight larger than real, or accurate range
-coord_mapping_error_estimation: 2 #meters TUNING
+
+# fake_angle_finder
+theta_1: 1 #radians
+theta_2: 3 #radians
+
