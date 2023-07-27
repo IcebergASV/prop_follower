@@ -1,6 +1,6 @@
 #include <ros/ros.h>
 #include <cmath>
-#include "lidarPoint.h"
+#include "../lib/lidarPoint.h"
 #include <string>
 #include <iostream>
 #include <geometry_msgs/Twist.h>

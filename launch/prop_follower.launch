@@ -23,7 +23,7 @@
     <rosparam file="$(find prop_follower)/config/fake_coords.yaml" command="load" />
   </node>
 
-  <!--node name="velocity_sender" pkg="prop_follower" type="velocity_sender_node" output="log" if="$(arg velocity_sender)" >
+  <!--node name="velocity_sender" pkg="prop_follower" type="velocity_sender" output="log" if="$(arg velocity_sender)" >
     <rosparam file="$(find prop_follower)/config/params.yaml" command="load" />
   </node-->
 

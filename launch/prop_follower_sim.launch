@@ -12,4 +12,8 @@
     <remap from="/scan" to="/rect_bot/laser/scan"/>
   </node>
 
+  <node name="velocity_sender" pkg="prop_follower" type="velocity_sender" output="log" >
+    <rosparam file="$(find prop_follower)/config/params.yaml" command="load" />
+  </node>
+
 </launch>
