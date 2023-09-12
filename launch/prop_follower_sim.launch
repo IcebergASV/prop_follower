@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
   <!--Launch file for sim-->
-  <include file="$(find box_bot_sim_pkg)/launch/rect_bot_world.launch"/>
+  <include file="$(find boat_sim)/launch/boat.launch"/>
+  <include file="$(find boat_sim)/launch/apm.launch"/>
 
   <node name="fake_angle_finder" pkg="prop_follower" type="fake_angle_finder" output="log">
     <rosparam file="$(find prop_follower)/config/params.yaml" command="load" />
@@ -9,7 +10,7 @@
 
   <node name="coord_finder" pkg="prop_follower" type="coord_finder" output="log">
     <rosparam file="$(find prop_follower)/config/params.yaml" command="load" />
-    <remap from="/scan" to="/rect_bot/laser/scan"/>
+    <remap from="/scan" to="/laser/scan"/>
   </node>
 
   <node name="velocity_sender" pkg="prop_follower" type="velocity_sender" output="log" >
