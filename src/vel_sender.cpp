@@ -1,10 +1,11 @@
 #include <ros/ros.h>
 #include <cmath>
-#include "../lib/lidarPoint.h"
+#include "lidarPoint.h"
 #include <string>
 #include <iostream>
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/Vector3.h>
+#include <gnc_functions.hpp> // Intelligent Quads mavros API
 
 //TO DO: make callback use the appropriate message type for /prop_local_coords topic
 //
@@ -52,6 +53,19 @@ private:
 int main(int argc, char** argv) {
     ros::init(argc, argv, "vel_sender_node");
     VelSender vel_sender;
+    
+    // wait for FCU connection
+	wait4connect();
+
+	//wait for used to switch to mode GUIDED
+	wait4start();
+
+	//create local reference frame 
+	initialize_local_frame();
+
+	// arm boat 
+	arm();
+
     vel_sender.spin();
     return 0;
 }
