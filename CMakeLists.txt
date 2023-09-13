@@ -126,7 +126,7 @@ include_directories(
 ## Declare a C++ library
 add_library(lidarPointLib
   lib/lidarPoint.cpp
-  lib/lidarPoint.h
+  include/lidarPoint.h
 )
 
 ## Add cmake target dependencies of the library
@@ -155,9 +155,9 @@ add_library(lidarPointLib
 # )
 
 
-#add_executable(waypoint_sender src/waypoint_sender.cpp)
-#target_link_libraries(waypoint_sender ${catkin_LIBRARIES})
-#add_dependencies(waypoint_sender ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+add_executable(waypoint_sender src/waypoint_sender.cpp)
+target_link_libraries(waypoint_sender ${catkin_LIBRARIES})
+add_dependencies(waypoint_sender ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 
 add_executable(velocity_sender src/vel_sender.cpp)
 target_link_libraries(velocity_sender ${catkin_LIBRARIES})

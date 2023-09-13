@@ -13,8 +13,11 @@
     <remap from="/scan" to="/laser/scan"/>
   </node>
 
-  <node name="velocity_sender" pkg="prop_follower" type="velocity_sender" output="log" >
+  <!--node name="velocity_sender" pkg="prop_follower" type="velocity_sender" output="log" >
     <rosparam file="$(find prop_follower)/config/params.yaml" command="load" />
+  </node-->
+
+  <node name="waypoint_sender" pkg="prop_follower" type="waypoint_sender" output="log" >
   </node>
 
 </launch>
