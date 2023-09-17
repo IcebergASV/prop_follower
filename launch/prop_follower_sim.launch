@@ -17,7 +17,7 @@
     <rosparam file="$(find prop_follower)/config/params.yaml" command="load" />
   </node-->
 
-  <node name="waypoint_sender" pkg="prop_follower" type="waypoint_sender" output="log" >
+  <node name="waypoint_sender" pkg="prop_follower" type="waypoint_sender" output="screen" >
   </node>
 
 </launch>

@@ -7,8 +7,9 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Vector3.h>
 #include <gnc_functions.hpp> // Intelligent Quads mavros API
+#include <ros/console.h>
 
-
+std::string TAG = "WP_SENDER: ";
 class WPSender {
 public:
     WPSender() : nh_(""), private_nh_("~")
@@ -40,7 +41,7 @@ public:
       local_desired_heading_g = heading; 
       heading = heading + correction_heading_g + local_offset_g;
     
-      ROS_INFO("Desired Heading %f ", local_desired_heading_g);
+      ROS_INFO_STREAM(TAG << "Desired Heading " << local_desired_heading_g);
       float yaw = heading*(M_PI/180);
       float pitch = 0;
       float roll = 0;
@@ -80,7 +81,7 @@ public:
     	x = Xlocal + correction_vector_g.position.x + local_offset_pose_g.x;
     	y = Ylocal + correction_vector_g.position.y + local_offset_pose_g.y;
     	z = Zlocal + correction_vector_g.position.z + local_offset_pose_g.z;
-    	ROS_INFO("Destination set to x: %f y: %f z: %f origin frame", x, y, z);
+    	ROS_INFO_STREAM(TAG << "Destination set to x " << x << "y: " << y << "z: " << z );
 
     	waypoint_.pose.position.x = x;
     	waypoint_.pose.position.y = y;
@@ -96,19 +97,19 @@ public:
     */
     int wait4connect()
     {
-    	ROS_INFO("Waiting for FCU connection");
+    	ROS_INFO_STREAM(TAG << "Waiting for FCU connection");
     	// wait for FCU connection
     	while (ros::ok() && !current_state_g.connected)
     	{
-    		//ros::spinOnce(); THIS LINE CAUSES MAVPROXY CONNECTION TO CLOSE BUT I NEED IT TO UPDATE STATE
+    		ros::spinOnce(); //THIS LINE CAUSES MAVPROXY CONNECTION TO CLOSE BUT I NEED IT TO UPDATE STATE
     		ros::Duration(0.01).sleep();
     	}
     	if(current_state_g.connected)
     	{
-    		ROS_INFO("Connected to FCU");	
+    		ROS_INFO_STREAM(TAG << "Connected to FCU");	
     		return 0;
     	}else{
-    		ROS_INFO("Error connecting to drone");
+    		ROS_INFO_STREAM(TAG << "Error connecting to drone");
     		return -1;	
     	}
     
@@ -121,7 +122,7 @@ public:
     */
     int wait4start()
     {
-    	ROS_INFO("Waiting for user to set mode to GUIDED");
+    	ROS_INFO_STREAM(TAG << "Waiting for user to set mode to GUIDED");
     	while(ros::ok() && current_state_g.mode != "GUIDED")
     	{
     	    ros::spinOnce();
@@ -129,10 +130,10 @@ public:
       	}
       	if(current_state_g.mode == "GUIDED")
     	{
-    		ROS_INFO("Mode set to GUIDED. Mission starting");
+    		ROS_INFO_STREAM(TAG << "Mode set to GUIDED. Mission starting");
     		return 0;
     	}else{
-    		ROS_INFO("Error starting mission!!");
+    		ROS_INFO_STREAM(TAG << "Error starting mission!!");
     		return -1;	
     	}
     }
@@ -144,7 +145,7 @@ public:
     int initialize_local_frame()
     {
     	//set the orientation of the local reference frame
-    	ROS_INFO("Initializing local coordinate system");
+    	ROS_INFO_STREAM(TAG << "Initializing local coordinate system");
     	local_offset_g = 0;
     	for (int i = 1; i <= 30; i++) {
     		ros::spinOnce();
@@ -163,14 +164,14 @@ public:
     		local_offset_pose_g.x = local_offset_pose_g.x + current_pose_g.pose.pose.position.x;
     		local_offset_pose_g.y = local_offset_pose_g.y + current_pose_g.pose.pose.position.y;
     		local_offset_pose_g.z = local_offset_pose_g.z + current_pose_g.pose.pose.position.z;
-    		// ROS_INFO("current heading%d: %f", i, local_offset_g/i);
+    		// ROS_INFO(TAG, "current heading%d: %f", i, local_offset_g/i);
     	}
     	local_offset_pose_g.x = local_offset_pose_g.x/30;
     	local_offset_pose_g.y = local_offset_pose_g.y/30;
     	local_offset_pose_g.z = local_offset_pose_g.z/30;
     	local_offset_g /= 30;
-    	ROS_INFO("Coordinate offset set");
-    	ROS_INFO("the X' axis is facing: %f", local_offset_g);
+    	ROS_INFO_STREAM(TAG << "Coordinate offset set");
+    	ROS_INFO_STREAM(TAG << "the X' axis is facing: " << local_offset_g);
     	return 0;
     }
 
@@ -185,7 +186,7 @@ public:
     		ros::Duration(0.01).sleep();
     	}
     	// arming
-    	ROS_INFO("Arming drone");
+    	ROS_INFO_STREAM(TAG << "Arming drone");
     	mavros_msgs::CommandBool arm_request;
     	arm_request.request.value = true;
     	while (!current_state_g.armed && !arm_request.response.success && ros::ok())
@@ -196,10 +197,10 @@ public:
     	}
     	if(arm_request.response.success)
     	{
-    		ROS_INFO("Arming Successful");	
+    		ROS_INFO_STREAM(TAG << "Arming Successful");	
     		return 0;
     	}else{
-    		ROS_INFO("Arming failed with %d", arm_request.response.success);
+    		ROS_INFO_STREAM(TAG << "Arming failed with " << arm_request.response.success);
     		return -1;	
     	}
     }
@@ -252,12 +253,12 @@ private:
       float q2 = current_pos_.pose.pose.orientation.y;
       float q3 = current_pos_.pose.pose.orientation.z;
       float psi = atan2((2*(q0*q3 + q1*q2)), (1 - 2*(pow(q2,2) + pow(q3,2))) );
-      //ROS_INFO("Current Heading %f ENU", psi*(180/M_PI));
+      //ROS_INFO(TAG, "Current Heading %f ENU", psi*(180/M_PI));
       //Heading is in ENU
       //IS YAWING COUNTERCLOCKWISE POSITIVE?
       current_heading_ = psi*(180/M_PI) - local_offset_g;
-      //ROS_INFO("Current Heading %f origin", current_heading_g);
-      //ROS_INFO("x: %f y: %f z: %f", current_pose_g.pose.pose.position.x, current_pose_g.pose.pose.position.y, current_pose_g.pose.pose.position.z);
+      //ROS_INFO(TAG, "Current Heading %f origin", current_heading_g);
+      //ROS_INFO(TAG, "x: %f y: %f z: %f", current_pose_g.pose.pose.position.x, current_pose_g.pose.pose.position.y, current_pose_g.pose.pose.position.z);
     }
 
 
@@ -271,21 +272,24 @@ int main(int argc, char** argv)
 {
 	//initialize ros 
 	ros::init(argc, argv, "wp_sender_node");
+    if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info))
+        ros::console::notifyLoggerLevelsChanged();
     WPSender wp_sender;
 
     // wait for FCU connection
+    ROS_WARN(TAG, "Test WARN Message");
     wp_sender.wait4connect();
-
+    ROS_WARN(TAG, "Test INFO Message");
 	//wait for user to switch to mode GUIDED
-	//wp_sender.wait4start();
-
+	wp_sender.wait4start();
+    ROS_WARN(TAG, "Test DEBUG Message");
 	//create local reference frame 
-	//wp_sender.initialize_local_frame();
+	wp_sender.initialize_local_frame();
 
 	// arm boat 
-	//wp_sender.arm();
+	wp_sender.arm();
 
-   // wp_sender.spin();
+    wp_sender.spin();
     return 0;
 
 }
