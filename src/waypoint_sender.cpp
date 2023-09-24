@@ -132,6 +132,7 @@ public:
 
             ROS_DEBUG_STREAM(TAG << "Stuck in wiat4start loop");
       	}
+        ROS_DEBUG_STREAM(TAG << "exited while loop");
       	if(current_state_.mode == "GUIDED")
     	{
     		ROS_INFO_STREAM(TAG << "Mode set to GUIDED. Mission starting");
@@ -233,7 +234,14 @@ private:
 //
 //
         //setpoint_velocity_pub_.publish(waypoint);
-        set_destination(vector_msg->x, vector_msg->y, vector_msg->z, 0);
+
+        if (current_state_.armed){
+            ROS_DEBUG_STREAM( TAG << "wpCAllback is armed");
+            set_destination(vector_msg->x, vector_msg->y, vector_msg->z, 0);
+            //set_destination(4,6,0,0);
+        }
+            
+
     }
 
     void mavrosStateCallback(const mavros_msgs::State::ConstPtr& msg)
