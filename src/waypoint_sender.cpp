@@ -81,7 +81,7 @@ public:
     	x = Xlocal + correction_vector_g.position.x + local_offset_pose_g.x;
     	y = Ylocal + correction_vector_g.position.y + local_offset_pose_g.y;
     	z = Zlocal + correction_vector_g.position.z + local_offset_pose_g.z;
-    	ROS_INFO_STREAM(TAG << "Destination set to x " << x << "y: " << y << "z: " << z );
+    	ROS_INFO_STREAM(TAG << "Destination set to x " << x << " y: " << y << " z: " << z );
 
     	waypoint_.pose.position.x = x;
     	waypoint_.pose.position.y = y;
@@ -237,8 +237,30 @@ private:
 
         if (current_state_.armed){
             ROS_DEBUG_STREAM( TAG << "wpCAllback is armed");
-            set_destination(vector_msg->x, vector_msg->y, vector_msg->z, 0);
-            //set_destination(4,6,0,0);
+
+            ROS_DEBUG_STREAM(TAG << " x is: " <<  vector_msg->x << "y is: " << vector_msg->y);
+
+            
+
+            double heading = std::atan(vector_msg->y/vector_msg->x);
+
+            if (heading < 0)
+            {
+                heading = M_PI - heading;
+            }
+
+            ROS_DEBUG_STREAM(TAG << " heading is: " << heading);
+
+            if ((vector_msg->x < 30) && (vector_msg->y < 30)){
+                ROS_DEBUG_STREAM(TAG << " x and y less than 30");
+                set_destination(vector_msg->x, vector_msg->y, 0, 0);
+            }
+            else{
+                ROS_DEBUG_STREAM(TAG << " x and y greater than 30");
+                set_destination(0, 0, 0, 0);
+            }
+            
+           // set_destination(-10,-5,0,0);
         }
             
 
