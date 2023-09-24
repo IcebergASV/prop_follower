@@ -16,7 +16,7 @@ public:
     {
         prop_local_coords_sub_ = nh_.subscribe("/prop_local_coords", 1, &WPSender::wpCallback, this);
         setpoint_waypoint_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("mavros/setpoint_position/local", 1);
-        state_sub = nh_.subscribe<mavros_msgs::State>("mavros/state", 10, &WPSender::mavrosStateCallback, this);
+        mavros_state_sub_ = nh_.subscribe<mavros_msgs::State>("mavros/state", 10, &WPSender::mavrosStateCallback, this);
         current_pos_sub_ = nh_.subscribe("/mavros/global_position/local", 10, &WPSender::poseCallback, this);
         arming_client = nh_.serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");
     }
@@ -99,12 +99,13 @@ public:
     {
     	ROS_INFO_STREAM(TAG << "Waiting for FCU connection");
     	// wait for FCU connection
-    	while (ros::ok() && !current_state_g.connected)
+    	while (ros::ok() && !current_state_.connected)
     	{
+            ROS_DEBUG_STREAM(TAG << "Inside wait for connect loop");
     		ros::spinOnce(); //THIS LINE CAUSES MAVPROXY CONNECTION TO CLOSE BUT I NEED IT TO UPDATE STATE
     		ros::Duration(0.01).sleep();
     	}
-    	if(current_state_g.connected)
+    	if(current_state_.connected)
     	{
     		ROS_INFO_STREAM(TAG << "Connected to FCU");	
     		return 0;
@@ -113,6 +114,7 @@ public:
     		return -1;	
     	}
     
+        ROS_DEBUG_STREAM(TAG << " End of wait4connect function");
     }
 
     /**
@@ -123,12 +125,12 @@ public:
     int wait4start()
     {
     	ROS_INFO_STREAM(TAG << "Waiting for user to set mode to GUIDED");
-    	while(ros::ok() && current_state_g.mode != "GUIDED")
+    	while(ros::ok() && current_state_.mode != "GUIDED")
     	{
     	    ros::spinOnce();
     	    ros::Duration(0.01).sleep();
       	}
-      	if(current_state_g.mode == "GUIDED")
+      	if(current_state_.mode == "GUIDED")
     	{
     		ROS_INFO_STREAM(TAG << "Mode set to GUIDED. Mission starting");
     		return 0;
@@ -189,7 +191,7 @@ public:
     	ROS_INFO_STREAM(TAG << "Arming drone");
     	mavros_msgs::CommandBool arm_request;
     	arm_request.request.value = true;
-    	while (!current_state_g.armed && !arm_request.response.success && ros::ok())
+    	while (!current_state_.armed && !arm_request.response.success && ros::ok())
     	{
     		ros::Duration(.1).sleep();
     		arming_client.call(arm_request);
@@ -234,7 +236,7 @@ private:
     ros::NodeHandle nh_;
     ros::Subscriber prop_local_coords_sub_;
     ros::Subscriber current_pos_sub_;
-    ros::Subscriber mavros_state;
+    ros::Subscriber mavros_state_sub_;
     ros::Publisher setpoint_waypoint_pub_;
     ros::NodeHandle private_nh_;
     ros::ServiceClient arming_client;
@@ -272,17 +274,17 @@ int main(int argc, char** argv)
 {
 	//initialize ros 
 	ros::init(argc, argv, "wp_sender_node");
-    if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info))
+    if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug))
         ros::console::notifyLoggerLevelsChanged();
     WPSender wp_sender;
 
     // wait for FCU connection
-    ROS_WARN(TAG, "Test WARN Message");
+    ROS_WARN_STREAM(TAG << "Test WARN Message");
     wp_sender.wait4connect();
-    ROS_WARN(TAG, "Test INFO Message");
+    ROS_INFO_STREAM(TAG << "Test INFO Message");
 	//wait for user to switch to mode GUIDED
 	wp_sender.wait4start();
-    ROS_WARN(TAG, "Test DEBUG Message");
+    ROS_DEBUG_STREAM(TAG << "Test DEBUG Message");
 	//create local reference frame 
 	wp_sender.initialize_local_frame();
 
