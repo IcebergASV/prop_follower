@@ -129,6 +129,8 @@ public:
     	{
     	    ros::spinOnce();
     	    ros::Duration(0.01).sleep();
+
+            ROS_DEBUG_STREAM(TAG << "Stuck in wiat4start loop");
       	}
       	if(current_state_.mode == "GUIDED")
     	{
@@ -138,6 +140,8 @@ public:
     		ROS_INFO_STREAM(TAG << "Error starting mission!!");
     		return -1;	
     	}
+
+        ROS_DEBUG_STREAM(TAG << "End of wait4start function");
     }
 
     /**
@@ -183,9 +187,13 @@ public:
     	set_destination(0,0,0,0);
     	for(int i=0; i<100; i++)
     	{
-    		local_pos_pub.publish(waypoint_);
+            ROS_DEBUG_STREAM(TAG << "before publishing wp to arm");
+    		setpoint_waypoint_pub_.publish(waypoint_);
+            ROS_DEBUG_STREAM(TAG << "after publishing wp to arm");
+
     		ros::spinOnce();
     		ros::Duration(0.01).sleep();
+            ROS_DEBUG_STREAM(TAG << "bottom of loop");
     	}
     	// arming
     	ROS_INFO_STREAM(TAG << "Arming drone");
@@ -195,7 +203,7 @@ public:
     	{
     		ros::Duration(.1).sleep();
     		arming_client.call(arm_request);
-    		local_pos_pub.publish(waypoint_);
+    		setpoint_waypoint_pub_.publish(waypoint_);
     	}
     	if(arm_request.response.success)
     	{
