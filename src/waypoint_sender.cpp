@@ -1,12 +1,14 @@
 #include <ros/ros.h>
 #include <cmath>
+#include <mavros_msgs/State.h>
+#include <nav_msgs/Odometry.h>
+#include <mavros_msgs/CommandBool.h>
 #include "lidarPoint.h"
 #include <string>
 #include <iostream>
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Vector3.h>
-#include <gnc_functions.hpp> // Intelligent Quads mavros API
 #include <ros/console.h>
 
 std::string TAG = "WP_SENDER: ";
@@ -27,6 +29,32 @@ public:
             ros::spinOnce();
             rate.sleep();
         }
+    }
+
+    float local_desired_heading_g;
+    float correction_heading_g = 0; 
+    float local_offset_g;
+    float current_heading_g;
+
+    geometry_msgs::Pose correction_vector_g;
+    geometry_msgs::Point local_offset_pose_g;
+    mavros_msgs::State current_state_g;
+    nav_msgs::Odometry current_pose_g;
+
+    geometry_msgs::Point enu_2_local(nav_msgs::Odometry current_pose_enu)
+    {
+      float x = current_pose_enu.pose.pose.position.x;
+      float y = current_pose_enu.pose.pose.position.y;
+      float z = current_pose_enu.pose.pose.position.z;
+      float deg2rad = (M_PI/180);
+      geometry_msgs::Point current_pos_local;
+      current_pos_local.x = x*cos((local_offset_g - 90)*deg2rad) - y*sin((local_offset_g - 90)*deg2rad);
+      current_pos_local.y = x*sin((local_offset_g - 90)*deg2rad) + y*cos((local_offset_g - 90)*deg2rad);
+      current_pos_local.z = z;
+
+      return current_pos_local;
+
+      //ROS_INFO("Local position %f %f %f",X, Y, Z);
     }
 
     //set orientation of the drone (drone should always be level) 
@@ -130,7 +158,7 @@ public:
     	    ros::spinOnce();
     	    ros::Duration(0.01).sleep();
 
-            ROS_DEBUG_STREAM(TAG << "Stuck in wiat4start loop");
+            ROS_DEBUG_STREAM(TAG << "Stuck in wait4start loop");
       	}
         ROS_DEBUG_STREAM(TAG << "exited while loop");
       	if(current_state_.mode == "GUIDED")
@@ -220,21 +248,21 @@ private:
     float current_heading_;
     float local_offset_;
 
+    ros::NodeHandle nh_;
+    ros::Subscriber prop_local_coords_sub_;
+    ros::Subscriber current_pos_sub_;
+    ros::Subscriber mavros_state_sub_;
+    ros::Publisher setpoint_waypoint_pub_;
+    ros::NodeHandle private_nh_;
+    ros::ServiceClient arming_client;
+
+    mavros_msgs::State current_state_;
+    nav_msgs::Odometry current_pos_;
+    geometry_msgs::PoseStamped waypoint_;
+
+
     void wpCallback(const geometry_msgs::Vector3::ConstPtr& vector_msg)
     {
-        //geometry_msgs::PoseStamped waypoint;
-        //geometry_msgs::Vector3 vector_msg = *msg;
-        //waypoint.pose.position.x = vector_msg->x;
-        //waypoint.pose.position.y = vector_msg->y;
-        //waypoint.pose.position.z = vector_msg->z;
-        //waypoint.pose.orientation.w = 0.5;
-        //waypoint.pose.orientation.x = 0.5;
-        //waypoint.pose.orientation.y = 0.5;
-        //waypoint.pose.orientation.z = 0.5;
-//
-//
-        //setpoint_velocity_pub_.publish(waypoint);
-
         if (current_state_.armed){
             ROS_DEBUG_STREAM( TAG << "wpCAllback is armed");
 
@@ -259,8 +287,6 @@ private:
                 ROS_DEBUG_STREAM(TAG << " x and y greater than 30");
                 set_destination(0, 0, 0, 0);
             }
-            
-           // set_destination(-10,-5,0,0);
         }
             
 
@@ -270,18 +296,6 @@ private:
     {
         current_state_ = *msg;
     }
-
-    ros::NodeHandle nh_;
-    ros::Subscriber prop_local_coords_sub_;
-    ros::Subscriber current_pos_sub_;
-    ros::Subscriber mavros_state_sub_;
-    ros::Publisher setpoint_waypoint_pub_;
-    ros::NodeHandle private_nh_;
-    ros::ServiceClient arming_client;
-
-    mavros_msgs::State current_state_;
-    nav_msgs::Odometry current_pos_;
-    geometry_msgs::PoseStamped waypoint_;
 
     //get current position of drone
     void poseCallback(const nav_msgs::Odometry::ConstPtr& msg)
@@ -301,10 +315,6 @@ private:
       //ROS_INFO(TAG, "x: %f y: %f z: %f", current_pose_g.pose.pose.position.x, current_pose_g.pose.pose.position.y, current_pose_g.pose.pose.position.z);
     }
 
-
-
-
-
 };
 
 
@@ -317,12 +327,11 @@ int main(int argc, char** argv)
     WPSender wp_sender;
 
     // wait for FCU connection
-    ROS_WARN_STREAM(TAG << "Test WARN Message");
     wp_sender.wait4connect();
-    ROS_INFO_STREAM(TAG << "Test INFO Message");
+
 	//wait for user to switch to mode GUIDED
 	wp_sender.wait4start();
-    ROS_DEBUG_STREAM(TAG << "Test DEBUG Message");
+
 	//create local reference frame 
 	wp_sender.initialize_local_frame();
 
