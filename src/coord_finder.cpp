@@ -1,116 +1,206 @@
 #include <ros/ros.h>
-#include <navigation_pkg/Compass.h> 
-#include <navigation_pkg/PropInProgress.h>
-#include <navigation_pkg/Prop.h>
-#include <navigation_pkg/SimpleGPS.h> //temporary
-#include <geographic_msgs/GeoPoint.h>
-#include <cmath> 
+#include <sensor_msgs/LaserScan.h>
+#include <prop_follower/PropAngleRange.h>
+#include <geometry_msgs/Vector3.h>
+#include <cmath>
+#include <vector>
+#include <stdexcept>
+#include "lidarPoint.h"
+#include <string>
+#include <iostream>
 #include <ros/console.h>
 
-
-
+/**
+* @brief Finds the relative local coordinates of the prop with the robot's current position as a reference
+* 
+* Using the angle range and LiDAR scan, picks the closest point within the angle range.
+* The props are small enough that this point can be taken to represent the center of the prop. 
+* Converts this distance and angle to x and y coordinates
+*
+*/
 class CoordFinder {
 public:
-    CoordFinder() : nh_(""), private_nh_("~") 
-    {
-        gps_sub_ = nh_.subscribe("/mavros/global_position/global", 1, &CoordFinder::gpsCallback, this);
-        compass_sub_ = nh_.subscribe("/mavros/global_position/compass_hdg", 1, &CoordFinder::compassCallback, this );
-        prop_sub_ = nh_.subscribe("/prop_closest_point", 1, &CoordFinder::propCallback, this);
-        prop_pub_ = nh_.advertise<navigation_pkg::Prop>("/completed_props", 1);
-        private_nh_.param<double>("coord_mapping_error_estimation", coord_mapping_error_estimation, 0.0); 
-        private_nh_.param<double>("degrees_lat_per_meter", degrees_lat_per_meter, 0.0);
-        private_nh_.param<double>("degrees_lon_per_meter", degrees_lon_per_meter, 0.0);
+    CoordFinder() : nh_(""), private_nh_("~") {
         
+        // get ROS parameters
+        private_nh_.param<double>("angle_error_adjustment", angle_error_adjustment_, 0.0);
+
+        private_nh_.param<std::string>("prop_topic", prop_topic_, "/prop_angle_range");
+        private_nh_.param<std::string>("scan_topic", scan_topic_, "/scan");
+        
+
+        sub_scan_ = nh_.subscribe(scan_topic_, 1, &CoordFinder::scanCallback, this);
+        sub_prop_ = nh_.subscribe(prop_topic_, 1, &CoordFinder::propCallback, this);
+        pub_prop_closest_ = nh_.advertise<geometry_msgs::Vector3>("/prop_local_coords", 1);
     }
 
     void spin() {
-        ros::Rate rate(10); // 10 Hz
+        ros::Rate rate(2); // 10 Hz
         while (ros::ok()) {
             ros::spinOnce();
             rate.sleep();
         }
     }
+    
 
 private:
-    void gpsCallback(const navigation_pkg::SimpleGPS::ConstPtr& msg)
-    {
-        robot_lat_ = msg->latitude;
-        robot_lon_ = msg->longitude;
-        robot_alt_ = msg->altitude;
-    }
-
-    void compassCallback(const navigation_pkg::Compass::ConstPtr& msg)
-    {
-        robot_heading = msg->data;
-    }
-
-    void propCallback(const navigation_pkg::PropInProgress::ConstPtr& msg)
-    {
-        //// Calculate the GPS coordinates of the prop
-        double dist = msg->closest_pnt_dist;
-        double angle = msg->closest_pnt_angle;
-        double prop_heading;
-        
-        if ((robot_heading - angle) > (2*M_PI))
-            prop_heading = robot_heading - angle - (2* M_PI);
-        else 
-            prop_heading = robot_heading - angle;
-
-        double north_dist = dist * cos(prop_heading);
-        double east_dist = dist * sin(prop_heading);
-
-        double lat_diff = north_dist * degrees_lat_per_meter;
-        double lon_diff = east_dist * degrees_lon_per_meter;
-
-        double prop_lat = robot_lat_ + lat_diff;
-        double prop_lon = robot_lon_ + lon_diff;
-        double prop_alt = robot_alt_;
-
-
-        double lat_safety_range = degrees_lat_per_meter * coord_mapping_error_estimation;
-        double lon_safety_range = degrees_lon_per_meter * coord_mapping_error_estimation;
-
-        
-        // Create and publish the Prop message with the prop coordinates
-        navigation_pkg::Prop prop_msg;
-        prop_msg.prop_type = msg->prop_type;
-
-        prop_msg.prop_coords.latitude = prop_lat;
-        prop_msg.prop_coords.longitude = prop_lon;
-        prop_msg.prop_coords.altitude = prop_alt;
-
-        prop_msg.prop_coord_range.min_latitude = prop_lat - lat_safety_range;
-        prop_msg.prop_coord_range.max_latitude = prop_lat + lat_safety_range;
-        prop_msg.prop_coord_range.min_longitude = prop_lon - lon_safety_range;
-        prop_msg.prop_coord_range.max_longitude = prop_lon + lon_safety_range;
-
-        prop_pub_.publish(prop_msg);
-    }
-
     ros::NodeHandle nh_;
     ros::NodeHandle private_nh_;
-    ros::Subscriber gps_sub_;
-    ros::Subscriber prop_sub_;
-    ros::Subscriber compass_sub_;
-    ros::Publisher prop_pub_;
-    double robot_lat_;
-    double robot_lon_;
-    double robot_alt_;
-    double robot_heading;
-    double coord_mapping_error_estimation;
-    double degrees_lat_per_meter;
-    double degrees_lon_per_meter;
+    ros::Subscriber sub_scan_;
+    ros::Subscriber sub_prop_;
+    ros::Publisher pub_prop_closest_;
+    std::string prop_topic_;
+    std::string scan_topic_;
+    double laser_angle_min_;
+    double laser_angle_max_;
+    double laser_angle_increment_;
+    double angle_error_adjustment_;
+    prop_follower::PropAngleRange prop_msg_;
+    sensor_msgs::LaserScan scan_msg_;
+
+    std::string TAG = "COORD_FINDER: ";
+
+    /**
+    * @brief Updates the prop label and angles
+    * 
+    * Runs whenever a message is published on /prop_angle_range 
+    */
+    void propCallback(const prop_follower::PropAngleRange::ConstPtr& msg) {
+        // save the PropInProgress message for later use
+        prop_msg_ = *msg;
+        ROS_DEBUG_STREAM(TAG << "Received PropInProgress message with theta_small=" << prop_msg_.theta_small << " and theta_large=" << prop_msg_.theta_large);
+    }
+
+    /**
+    * @brief Finds the nearest detected point and converts it to x and y coordinates. 
+    * 
+    * Runs whenever message is published on /scan topic. 
+    * Publishes a Vector3 message containing NED coordinates. (North East Down)
+    * 
+    * */
+    void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
+        laser_angle_min_ = scan_msg_.angle_min;
+        laser_angle_max_ = scan_msg_.angle_max;
+
+        // save the scan message for later use
+        scan_msg_ = *msg;
+        laser_angle_increment_ = scan_msg_.angle_increment;
+
+        // check if the PropInProgress message is valid
+        if (prop_msg_.prop_label.empty()) {
+            ROS_WARN_STREAM(TAG << "Invalid PropInProgress message received - Prop type is empty");
+            return;
+        }
+        if (std::isnan(prop_msg_.theta_small)) {
+            ROS_WARN_STREAM(TAG << "Invalid PropInProgress message received - theta 1 is empty");
+            return;
+        }
+        if (std::isnan(prop_msg_.theta_large)) {
+            ROS_WARN_STREAM(TAG << "Invalid PropInProgress message received - theta 2 is empty");
+            return;
+        }
+
+        //add a safety range onto the bounding box angles
+        double index1_angle = prop_msg_.theta_small + angle_error_adjustment_;
+        double index2_angle = prop_msg_.theta_large - angle_error_adjustment_;
+        // calculate the range indexes for the given theta angles
+        double steps = (laser_angle_max_ * 2) / laser_angle_increment_; 
+        int index1 = (int)(((index1_angle + (laser_angle_max_ - (M_PI/2))) / (laser_angle_max_*2))* steps);
+        int index2 = (int)(((index2_angle + (laser_angle_max_ - (M_PI/2))) / (laser_angle_max_*2))* steps);
+        ROS_DEBUG_STREAM(TAG << "index1 :" << index1 << " index2: " << index2);
+        ROS_DEBUG_STREAM(TAG << "size of scan message ranges " << scan_msg_.ranges.size());
+
+        // check that the range indexes are within the range of the scan message and that index1 > index2
+        if (index1 < 0 || index2 < 0 || index1 >= scan_msg_.ranges.size() || index2 >= scan_msg_.ranges.size() || index1 >= index2) {
+            ROS_WARN_STREAM(TAG << "PropInProgress message range indexes are out of bounds for the given scan message");
+            return;
+        }
+
+        //create a 2D vector containing distance angle pairs for points detected by lidar      
+        ROS_DEBUG_STREAM(TAG << "Laser angle min" << laser_angle_min_);
+        ROS_DEBUG_STREAM(TAG << "Laser angle increment" << laser_angle_increment_);
+        double starting_angle = laser_angle_min_ + (M_PI/2.0); //starting angle for lidar scan 
+        std::vector<lidarPoint> scanPoints = CoordFinder::createLidarPoints(scan_msg_.ranges, starting_angle, laser_angle_increment_);
+        if (scanPoints.size()<1){
+            ROS_WARN_STREAM(TAG << "No points added to scanPoints vector");
+            return;
+        }
+
+        //create a smaller vector of only points within the camera provided range
+        std::vector<lidarPoint> selectedPoints;
+        for (int i = index1; i <= index2; i++) {
+
+            selectedPoints.push_back(scanPoints[i]);
+            ROS_DEBUG_STREAM(TAG << "Pushing back points within camera range: " << scanPoints[i]);
+        }
+        if (selectedPoints.size()<1){
+            ROS_WARN_STREAM(TAG << "No points added to vector containing points within camera range ");
+            return;
+        }
+
+        // find the distance from the center of closest point and angle within the given range
+
+        int i = 0;
+        double closest_distance = selectedPoints[i].getDistance();
+        double closest_angle = selectedPoints[i].getAngle();
+        for (int i = 0; i < selectedPoints.size(); ++i) {
+            if (std::isnan(selectedPoints[i].getDistance())) {
+                continue; 
+            }
+            if(selectedPoints[i].getDistance() < closest_distance){
+                closest_distance = selectedPoints[i].getDistance(); 
+                closest_angle = selectedPoints[i].getAngle();       
+            }
+        }
+
+        ROS_DEBUG_STREAM(TAG << "closest_distance " << closest_distance);
+        ROS_DEBUG_STREAM(TAG << "closest angle " << closest_angle);
+
+        // Message to publish
+        geometry_msgs::Vector3 prop_coords_msg;
+        prop_coords_msg.x = closest_distance*sin(closest_angle); //North
+        prop_coords_msg.y = closest_distance*cos(closest_angle); //East 
+        prop_coords_msg.z = 0; //Down
+        pub_prop_closest_.publish(prop_coords_msg);
+    }
 
 
+    /**
+    * @brief Creates a vector of LidarPoints
+    * 
+    * @param[in] distances detected by Lidar
+    * @param[in] start_angle - the angle to start at
+    * @param[in] angle_increment - the amoung to increment the angle for each distance
+    * @returns the lidarPoints vector
+    */
+    std::vector<lidarPoint> createLidarPoints(const std::vector<float>& distances, double start_angle , double angle_increment) {
+        std::vector<lidarPoint> lidarPoints;
+        ROS_DEBUG_STREAM(TAG << "start angle: " << start_angle);
+        // Add the first Lidar point
+        lidarPoint firstPoint(distances[0], start_angle);
+        lidarPoints.push_back(firstPoint);
 
+        // Add the remaining Lidar points
+        double currentAngle = start_angle + angle_increment;
+        for (size_t i = 1; i < distances.size(); i++) {
+            double distance = distances[i];
+            lidarPoint point(distance, currentAngle);
+            lidarPoints.push_back(point);
+
+            currentAngle += angle_increment;
+        }
+
+    return lidarPoints;
+    }
+  
 
 };
-
 int main(int argc, char** argv) {
-    ros::init(argc, argv, "coord_finder_node");
+    ros::init(argc, argv, "coord_finder");
     if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info))
         ros::console::notifyLoggerLevelsChanged();
     CoordFinder coord_finder;
+
     coord_finder.spin();
     return 0;
 }

@@ -1,0 +1,3 @@
+string prop_label
+float64 theta_small
+float64 theta_large

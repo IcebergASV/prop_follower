@@ -8,9 +8,12 @@ project(prop_follower)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  geometry_msgs
   roscpp
   std_msgs
+  geometry_msgs
+  message_generation
+  sensor_msgs
+  mavros_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -47,11 +50,10 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+add_message_files(
+  FILES
+  PropAngleRange.msg
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -68,10 +70,11 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   geometry_msgs#   std_msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+  geometry_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -116,14 +119,15 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+ include
   ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/prop_follower.cpp
-# )
+add_library(lidarPointLib
+  lib/lidarPoint.cpp
+  include/lidarPoint.h
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -149,6 +153,36 @@ include_directories(
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
+
+
+add_executable(waypoint_sender src/waypoint_sender.cpp)
+target_link_libraries(waypoint_sender ${catkin_LIBRARIES})
+add_dependencies(waypoint_sender ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+
+add_executable(velocity_sender src/vel_sender.cpp)
+target_link_libraries(velocity_sender ${catkin_LIBRARIES})
+add_dependencies(velocity_sender ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+
+add_executable(coord_finder src/coord_finder.cpp)
+target_link_libraries(coord_finder ${catkin_LIBRARIES})
+add_dependencies(coord_finder ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+
+#add_executable(angle_finder src/angle_finder.cpp)
+#target_link_libraries(angle_finder ${catkin_LIBRARIES})
+#add_dependencies(angle_finder ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+
+add_executable(fake_angle_finder src/fake_angle_finder.cpp)
+target_link_libraries(fake_angle_finder ${catkin_LIBRARIES})
+add_dependencies(fake_angle_finder ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+
+add_executable(fake_coord_finder src/fake_coord_finder.cpp)
+target_link_libraries(fake_coord_finder ${catkin_LIBRARIES})
+add_dependencies(fake_coord_finder ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
+
+## Specify libraries to link a library or executable target against
+target_link_libraries(coord_finder
+  lidarPointLib
+ )
 
 #############
 ## Install ##
@@ -204,3 +238,4 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
