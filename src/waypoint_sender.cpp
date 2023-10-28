@@ -260,6 +260,8 @@ private:
     nav_msgs::Odometry current_pos_;
     geometry_msgs::PoseStamped waypoint_;
 
+    int current_position = 0;
+
 
     void wpCallback(const geometry_msgs::Vector3::ConstPtr& vector_msg)
     {
@@ -268,25 +270,31 @@ private:
 
             ROS_DEBUG_STREAM(TAG << " x is: " <<  vector_msg->x << "y is: " << vector_msg->y);
 
+            if (current_position == 0 && (vector_msg->x <29 ) && (vector_msg->x > -29) && (vector_msg->y <29 ) && (vector_msg->y > -29) )
+            {
+                double heading = std::atan(vector_msg->y/vector_msg->x);
+
+                if (heading < 0)
+                {
+                    heading = M_PI - heading;
+                }
+
+                ROS_DEBUG_STREAM(TAG << " heading is: " << heading);
+
+                if ((vector_msg->x < 30) && (vector_msg->y < 30)){
+                    ROS_DEBUG_STREAM(TAG << " x and y less than 30");
+                    set_destination(-vector_msg->x, -vector_msg->y, 0, 0);
+                }
+                else{
+                    ROS_DEBUG_STREAM(TAG << " x and y greater than 30");
+                    set_destination(0, 0, 0, 0);
+                }
+
+                current_position = 1;
+            }
             
 
-            double heading = std::atan(vector_msg->y/vector_msg->x);
 
-            if (heading < 0)
-            {
-                heading = M_PI - heading;
-            }
-
-            ROS_DEBUG_STREAM(TAG << " heading is: " << heading);
-
-            if ((vector_msg->x < 30) && (vector_msg->y < 30)){
-                ROS_DEBUG_STREAM(TAG << " x and y less than 30");
-                set_destination(vector_msg->x, vector_msg->y, 0, 0);
-            }
-            else{
-                ROS_DEBUG_STREAM(TAG << " x and y greater than 30");
-                set_destination(0, 0, 0, 0);
-            }
         }
             
 
