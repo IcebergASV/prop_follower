@@ -268,11 +268,16 @@ private:
         if (current_state_.armed){
             ROS_DEBUG_STREAM( TAG << "wpCAllback is armed");
 
-            ROS_DEBUG_STREAM(TAG << " x is: " <<  vector_msg->x << "y is: " << vector_msg->y);
+            //ROS_DEBUG_STREAM(TAG << " x is: " <<  vector_msg->x << "y is: " << vector_msg->y);
+            //float xcoord = vector_msg->x;
+            //float ycoord = vector_msg->y;
+            float xcoord = 7;
+            float ycoord = -17;
+            ROS_DEBUG_STREAM(TAG << " x is: " <<  xcoord << "y is: " << ycoord);
 
-            if (current_position == 0 && (vector_msg->x <29 ) && (vector_msg->x > -29) && (vector_msg->y <29 ) && (vector_msg->y > -29) )
+            if (current_position == 0 && (xcoord <29 ) && (xcoord > -29) && (ycoord <29 ) && (ycoord > -29) )
             {
-                double heading = std::atan(vector_msg->y/vector_msg->x);
+                double heading = std::atan(ycoord/xcoord);
 
                 if (heading < 0)
                 {
@@ -281,9 +286,9 @@ private:
 
                 ROS_DEBUG_STREAM(TAG << " heading is: " << heading);
 
-                if ((vector_msg->x < 30) && (vector_msg->y < 30)){
+                if ((xcoord < 30) && (ycoord < 30)){
                     ROS_DEBUG_STREAM(TAG << " x and y less than 30");
-                    set_destination(-vector_msg->y, vector_msg->x, 0, 0);
+                    set_destination(-xcoord, -ycoord, 0, 0);
                 }
                 else{
                     ROS_DEBUG_STREAM(TAG << " x and y greater than 30");
