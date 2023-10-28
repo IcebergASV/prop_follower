@@ -283,7 +283,7 @@ private:
 
                 if ((vector_msg->x < 30) && (vector_msg->y < 30)){
                     ROS_DEBUG_STREAM(TAG << " x and y less than 30");
-                    set_destination(-vector_msg->x, -vector_msg->y, 0, 0);
+                    set_destination(-vector_msg->y, vector_msg->x, 0, 0);
                 }
                 else{
                     ROS_DEBUG_STREAM(TAG << " x and y greater than 30");
