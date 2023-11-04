@@ -33,11 +33,11 @@ public:
 
     float local_desired_heading_g;
     float correction_heading_g = 0; 
-    float local_offset_g;
+    //float local_offset_g;
     float current_heading_g;
 
     geometry_msgs::Pose correction_vector_g;
-    geometry_msgs::Point local_offset_pose_g;
+    //geometry_msgs::Point local_offset_pose_g;
     mavros_msgs::State current_state_g;
     nav_msgs::Odometry current_pose_g;
 
@@ -48,8 +48,10 @@ public:
       float z = current_pose_enu.pose.pose.position.z;
       float deg2rad = (M_PI/180);
       geometry_msgs::Point current_pos_local;
-      current_pos_local.x = x*cos((local_offset_g - 90)*deg2rad) - y*sin((local_offset_g - 90)*deg2rad);
-      current_pos_local.y = x*sin((local_offset_g - 90)*deg2rad) + y*cos((local_offset_g - 90)*deg2rad);
+      //current_pos_local.x = x*cos((local_offset_g - 90)*deg2rad) - y*sin((local_offset_g - 90)*deg2rad);
+      //current_pos_local.y = x*sin((local_offset_g - 90)*deg2rad) + y*cos((local_offset_g - 90)*deg2rad);
+      current_pos_local.x = x*cos((90)*deg2rad) - y*sin((90)*deg2rad);
+      current_pos_local.y = x*sin((90)*deg2rad) + y*cos((90)*deg2rad);
       current_pos_local.z = z;
 
       return current_pos_local;
@@ -67,7 +69,8 @@ public:
     void set_heading(float heading)
     {
       local_desired_heading_g = heading; 
-      heading = heading + correction_heading_g + local_offset_g;
+      heading = heading + correction_heading_g;
+      //heading = heading + correction_heading_g + local_offset_g;
     
       ROS_INFO_STREAM(TAG << "Desired Heading " << local_desired_heading_g);
       float yaw = heading*(M_PI/180);
@@ -102,13 +105,23 @@ public:
     	set_heading(psi);
     	//transform map to local
     	float deg2rad = (M_PI/180);
-    	float Xlocal = x*cos((correction_heading_g + local_offset_g - 90)*deg2rad) - y*sin((correction_heading_g + local_offset_g - 90)*deg2rad);
-    	float Ylocal = x*sin((correction_heading_g + local_offset_g - 90)*deg2rad) + y*cos((correction_heading_g + local_offset_g - 90)*deg2rad);
-    	float Zlocal = z;
+    	//float Xlocal = x*cos((correction_heading_g + local_offset_g - 90)*deg2rad) - y*sin((correction_heading_g + local_offset_g - 90)*deg2rad);
+    	//float Ylocal = x*sin((correction_heading_g + local_offset_g - 90)*deg2rad) + y*cos((correction_heading_g + local_offset_g - 90)*deg2rad);
+    	float Xlocal = x*cos((correction_heading_g - 90)*deg2rad) - y*sin((correction_heading_g - 90)*deg2rad);
+        float Ylocal = x*sin((correction_heading_g - 90)*deg2rad) + y*cos((correction_heading_g - 90)*deg2rad);
+        
+        float Zlocal = z;
 
-    	x = Xlocal + correction_vector_g.position.x + local_offset_pose_g.x;
-    	y = Ylocal + correction_vector_g.position.y + local_offset_pose_g.y;
-    	z = Zlocal + correction_vector_g.position.z + local_offset_pose_g.z;
+    	//x = Xlocal + correction_vector_g.position.x + local_offset_pose_g.x;
+    	//y = Ylocal + correction_vector_g.position.y + local_offset_pose_g.y;
+    	//z = Zlocal + correction_vector_g.position.z + local_offset_pose_g.z;
+
+
+        x = Xlocal + correction_vector_g.position.x;
+        y = Ylocal + correction_vector_g.position.y;
+        z = Zlocal + correction_vector_g.position.z;
+
+
     	ROS_INFO_STREAM(TAG << "Destination set to x " << x << " y: " << y << " z: " << z );
 
     	waypoint_.pose.position.x = x;
@@ -177,38 +190,38 @@ public:
     This function will create a local reference frame based on the starting location of the drone. This is typically done right before takeoff. This reference frame is what all of the the set destination commands will be in reference to.
     @returns 0 - frame initialized
     */
-    int initialize_local_frame()
-    {
-    	//set the orientation of the local reference frame
-    	ROS_INFO_STREAM(TAG << "Initializing local coordinate system");
-    	local_offset_g = 0;
-    	for (int i = 1; i <= 30; i++) {
-    		ros::spinOnce();
-    		ros::Duration(0.1).sleep();
-
-    
-
-    		float q0 = current_pose_g.pose.pose.orientation.w;
-    		float q1 = current_pose_g.pose.pose.orientation.x;
-    		float q2 = current_pose_g.pose.pose.orientation.y;
-    		float q3 = current_pose_g.pose.pose.orientation.z;
-    		float psi = atan2((2*(q0*q3 + q1*q2)), (1 - 2*(pow(q2,2) + pow(q3,2))) ); // yaw
-
-    		local_offset_g += psi*(180/M_PI);
-
-    		local_offset_pose_g.x = local_offset_pose_g.x + current_pose_g.pose.pose.position.x;
-    		local_offset_pose_g.y = local_offset_pose_g.y + current_pose_g.pose.pose.position.y;
-    		local_offset_pose_g.z = local_offset_pose_g.z + current_pose_g.pose.pose.position.z;
-    		// ROS_INFO(TAG, "current heading%d: %f", i, local_offset_g/i);
-    	}
-    	local_offset_pose_g.x = local_offset_pose_g.x/30;
-    	local_offset_pose_g.y = local_offset_pose_g.y/30;
-    	local_offset_pose_g.z = local_offset_pose_g.z/30;
-    	local_offset_g /= 30;
-    	ROS_INFO_STREAM(TAG << "Coordinate offset set");
-    	ROS_INFO_STREAM(TAG << "the X' axis is facing: " << local_offset_g);
-    	return 0;
-    }
+    //int initialize_local_frame()
+    //{
+    //	//set the orientation of the local reference frame
+    //	ROS_INFO_STREAM(TAG << "Initializing local coordinate system");
+    //	local_offset_g = 0;
+    //	for (int i = 1; i <= 30; i++) {
+    //		ros::spinOnce();
+    //		ros::Duration(0.1).sleep();
+//
+    //
+//
+    //		float q0 = current_pose_g.pose.pose.orientation.w;
+    //		float q1 = current_pose_g.pose.pose.orientation.x;
+    //		float q2 = current_pose_g.pose.pose.orientation.y;
+    //		float q3 = current_pose_g.pose.pose.orientation.z;
+    //		float psi = atan2((2*(q0*q3 + q1*q2)), (1 - 2*(pow(q2,2) + pow(q3,2))) ); // yaw
+//
+    //		local_offset_g += psi*(180/M_PI);
+//
+    //		local_offset_pose_g.x = local_offset_pose_g.x + current_pose_g.pose.pose.position.x;
+    //		local_offset_pose_g.y = local_offset_pose_g.y + current_pose_g.pose.pose.position.y;
+    //		local_offset_pose_g.z = local_offset_pose_g.z + current_pose_g.pose.pose.position.z;
+    //		// ROS_INFO(TAG, "current heading%d: %f", i, local_offset_g/i);
+    //	}
+    //	local_offset_pose_g.x = 0;//local_offset_pose_g.x/30;
+    //	local_offset_pose_g.y = 0;//local_offset_pose_g.y/30;
+    //	local_offset_pose_g.z = 0;//local_offset_pose_g.z/30;
+    //	local_offset_g =0;///= 30;
+    //	ROS_INFO_STREAM(TAG << "Coordinate offset set");
+    //	ROS_INFO_STREAM(TAG << "the X' axis is facing: " << local_offset_g);
+    //	return 0;
+    //}
 
     int arm()
     {
@@ -246,7 +259,7 @@ public:
 
 private:
     float current_heading_;
-    float local_offset_;
+    //float local_offset_;
 
     ros::NodeHandle nh_;
     ros::Subscriber prop_local_coords_sub_;
@@ -271,8 +284,8 @@ private:
             //ROS_DEBUG_STREAM(TAG << " x is: " <<  vector_msg->x << "y is: " << vector_msg->y);
             //float xcoord = vector_msg->x;
             //float ycoord = vector_msg->y;
-            float xcoord = 7;
-            float ycoord = -17;
+            float xcoord = 5;
+            float ycoord = 20;
             ROS_DEBUG_STREAM(TAG << " x is: " <<  xcoord << "y is: " << ycoord);
 
             if (current_position == 0 && (xcoord <29 ) && (xcoord > -29) && (ycoord <29 ) && (ycoord > -29) )
@@ -294,7 +307,6 @@ private:
                     ROS_DEBUG_STREAM(TAG << " x and y greater than 30");
                     set_destination(0, 0, 0, 0);
                 }
-
                 current_position = 1;
             }
             
@@ -323,7 +335,11 @@ private:
       //ROS_INFO(TAG, "Current Heading %f ENU", psi*(180/M_PI));
       //Heading is in ENU
       //IS YAWING COUNTERCLOCKWISE POSITIVE?
-      current_heading_ = psi*(180/M_PI) - local_offset_g;
+      //current_heading_ = psi*(180/M_PI) - local_offset_g;
+      current_heading_ = psi*(180/M_PI);
+      
+      
+      
       //ROS_INFO(TAG, "Current Heading %f origin", current_heading_g);
       //ROS_INFO(TAG, "x: %f y: %f z: %f", current_pose_g.pose.pose.position.x, current_pose_g.pose.pose.position.y, current_pose_g.pose.pose.position.z);
     }
@@ -343,15 +359,15 @@ int main(int argc, char** argv)
     wp_sender.wait4connect();
 
 	//wait for user to switch to mode GUIDED
-	wp_sender.wait4start();
+	//wp_sender.wait4start();
 
 	//create local reference frame 
-	wp_sender.initialize_local_frame();
+	//wp_sender.initialize_local_frame();
 
 	// arm boat 
-	wp_sender.arm();
+	//wp_sender.arm();
 
-    wp_sender.spin();
+    //wp_sender.spin();
     return 0;
 
 }
